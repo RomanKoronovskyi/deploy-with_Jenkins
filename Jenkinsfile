@@ -1,26 +1,35 @@
-pipeline {
-  agent {
-    docker {
-      image 'docker:27.0-cli'   // CLI here
-      args '-v /var/run/docker.sock:/var/run/docker.sock'
-    }
-  }
+node {
+    withEnv([
+        "DEPLOY_PORT = ${env.BRANCH_NAME == 'main' ? '3000' : '3001'}",
+        "CONTAINER_NAME = app-${env.BRANCH_NAME}-instance"
+    ]) {
+        docker.image('docker:latest').inside("-v /var/run/docker.sock:/var/run/docker.sock") {
+            
+            pipeline {
+                agent none 
 
-  stages {
-    stage('Build image') {
-      steps {
-        sh "docker --version"
-        sh "docker build -t app-image:${env.BRANCH_NAME} ."
-      }
-    }
+                stages {
+                    stage('Checkout SCM') {
+                        steps {
+                            checkout scm
+                        }
+                    }
+                    
+                    stage('Build Image') {
+                        steps {
+                            sh "docker build -t app-image:${env.BRANCH_NAME} ."
+                        }
+                    }
 
-    stage('Deploy') {
-      steps {
-        sh "docker stop app-${env.BRANCH_NAME}-container || true"
-        sh "docker rm app-${env.BRANCH_NAME}-container || true"
-        sh "docker run -d --name app-${env.BRANCH_NAME}-container -p ${env.BRANCH_NAME == 'main' ? '3000' : '3001'}:3000 app-image:${env.BRANCH_NAME}"
-      }
+                    stage('Deploy') {
+                        steps {
+                            sh "docker stop ${env.CONTAINER_NAME} || true"
+                            sh "docker rm ${env.CONTAINER_NAME} || true"
+                            sh "docker run -d --name ${env.CONTAINER_NAME} -p ${env.DEPLOY_PORT}:3000 app-image:${env.BRANCH_NAME}"
+                        }
+                    }
+                }
+            }
+        }
     }
-  }
 }
-
