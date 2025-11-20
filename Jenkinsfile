@@ -1,5 +1,5 @@
 pipeline {
-    agent none 
+    agent any 
     
     environment {
         DEPLOY_PORT = "${env.BRANCH_NAME == 'main' ? '3000' : '3001'}"
@@ -8,31 +8,18 @@ pipeline {
 
     stages {
         stage('Checkout SCM') {
-            agent any 
             steps {
                 checkout scm
             }
         }
         
         stage('Build Image') {
-            agent { 
-                docker { 
-                    image 'docker:latest' 
-                    args '-v /var/run/docker.sock:/var/run/docker.sock' 
-                }
-            }
             steps {
                 sh "docker build -t app-image:${env.BRANCH_NAME} ."
             }
         }
 
         stage('Deploy') {
-            agent { 
-                docker { 
-                    image 'docker:latest' 
-                    args '-v /var/run/docker.sock:/var/run/docker.sock' 
-                }
-            }
             steps {
                 sh "docker stop ${env.CONTAINER_NAME} || true"
                 sh "docker rm ${env.CONTAINER_NAME} || true"
