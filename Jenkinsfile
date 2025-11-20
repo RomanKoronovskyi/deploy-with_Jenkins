@@ -25,4 +25,5 @@ pipeline {
         echo "Deploy success"
       }
     }
+  }
 }
