@@ -1,15 +1,31 @@
 pipeline {
-  agent any
-  stages {
-	tools {
-      nodejs "Node18"
+    agent any
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            agent {
+                docker { image 'node:18' }
+            }
+            steps {
+                sh 'npm install'
+                sh 'npm run build'
+            }
+        }
+
+        stage('Archive') {
+            steps {
+                sh 'rm -rf *.tar.gz'
+                sh 'tar -czf build_artifact.tar.gz .'
+                archiveArtifacts artifacts: '*.tar.gz', fingerprint: true
+            }
+        }
     }
-    stage('Build') {
-      steps {
-	    sh "rm -rf *.tar.gz"
-        sh "npm install"
-	    sh "tar -czf archive-${BUILD_NUMBER}.tar.gz public scripts src Dockerfile package.json README.md"
-      }
-    }
-  }
 }
+
