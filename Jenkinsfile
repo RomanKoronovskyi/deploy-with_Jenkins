@@ -1,17 +1,7 @@
 pipeline {
     agent any
 
-    options {
-        skipDefaultCheckout()
-    }
-
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Build') {
             agent {
                 docker {
@@ -20,23 +10,20 @@ pipeline {
                 }
             }
             steps {
-                dir("${env.WORKSPACE}") {
-                    sh 'npm install'
-                    sh 'npm run build'
-                }
+                checkout scm
+                sh 'ls -la'
+                sh 'npm install'
+                sh 'npm run build'
             }
         }
 
         stage('Archive') {
             steps {
-                dir("${env.WORKSPACE}") {
-                    sh 'rm -rf *.tar.gz'
-                    sh 'tar -czf build_artifact.tar.gz public scripts src Dockerfile README.md package.json'
-                    archiveArtifacts artifacts: '*.tar.gz', fingerprint: true
-                }
+                sh 'rm -f build_artifact.tar.gz'
+                sh 'tar -czf build_artifact.tar.gz public scripts src Dockerfile README.md package.json'
+                archiveArtifacts artifacts: '*.tar.gz', fingerprint: true
             }
         }
     }
 }
-
 
