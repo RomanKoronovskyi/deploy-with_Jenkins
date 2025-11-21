@@ -1,25 +1,42 @@
 pipeline {
     agent any
 
+    options {
+        skipDefaultCheckout()
+    }
+
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
         stage('Build') {
             agent {
-                docker { image 'node:18' }
+                docker {
+                    image 'node:18'
+                    args '-u root:root'
+                }
             }
             steps {
-                sh 'npm install'
-                sh 'npm run build'
+                dir("${env.WORKSPACE}") {
+                    sh 'npm install'
+                    sh 'npm run build'
+                }
             }
         }
 
         stage('Archive') {
             steps {
-                sh 'rm -rf *.tar.gz'
-                sh 'tar -czf build_artifact.tar.gz .'
-                archiveArtifacts artifacts: '*.tar.gz', fingerprint: true
+                dir("${env.WORKSPACE}") {
+                    sh 'rm -rf *.tar.gz'
+                    sh 'tar -czf build_artifact.tar.gz .'
+                    archiveArtifacts artifacts: '*.tar.gz', fingerprint: true
+                }
             }
         }
     }
 }
+
 
