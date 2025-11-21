@@ -31,7 +31,7 @@ pipeline {
             steps {
                 dir("${env.WORKSPACE}") {
                     sh 'rm -rf *.tar.gz'
-                    sh 'tar -czf build_artifact.tar.gz .'
+                    sh 'tar -czf build_artifact.tar.gz public scripts src Dockerfile README.md package.json'
                     archiveArtifacts artifacts: '*.tar.gz', fingerprint: true
                 }
             }
