@@ -35,9 +35,11 @@ pipeline {
         }
 
         stage('Containerized') {
-          agent{
-            image 'docker:latest'
-            args '-v /var/run/docker.sock:/var/run/docker.sock'
+          agent {
+            docker {
+              image 'docker:latest'
+              args '-v /var/run/docker.sock:/var/run/docker.sock'
+            }
           }
           steps {
             sh "docker stop ${env.CONTAINER_NAME} || true"
